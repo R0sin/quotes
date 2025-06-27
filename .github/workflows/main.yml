@@ -1,0 +1,36 @@
+name: Generate RSS Feed
+
+on:
+  # 每天北京时间早上8点执行 (00:00 UTC)
+  schedule:
+    - cron: '0 0 * * *'
+  # 也允许手动触发
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 检出你的代码
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. 设置 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      # 3. 运行 Python 脚本生成 rss.xml
+      - name: Generate RSS file
+        run: python generate_rss.py
+
+      # 4. 将新生成的 rss.xml 提交回仓库
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add rss.xml
+          # 如果文件有变化才提交
+          git diff --staged --quiet || (git commit -m "Update RSS feed" && git push)
