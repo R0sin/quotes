@@ -1,17 +1,16 @@
 import json
 import random
 from datetime import datetime, timezone, timedelta
-from xml.etree import ElementTree as ET
-from xml.dom import minidom
+import xml.etree.ElementTree as ET
 
 # --- 配置区 ---
 QUOTES_FILE = 'quotes.json'
 RSS_FILE = 'rss.xml'
 FEED_LINK = 'https://r0sin.github.io/quotes/'
-# 【重要】Channel 标题必须是静态的、不变的
+# 静态、不变的 Channel 标题
 FEED_TITLE = '盗賊の極意'
 FEED_DESCRIPTION = '每日一条精选书摘或语录'
-GENERATOR = 'R0sin/Quotes-RSS-Generator' # 生成器名称
+GENERATOR = 'R0sin/Quotes-RSS-Generator' # 保持这个，是好习惯
 # ---------------
 
 def generate_rss():
@@ -25,18 +24,17 @@ def generate_rss():
     quote_source = quote.get('source', '')
 
     # 2. 构建 RSS XML 结构
-    # 【修复】添加了 dc 命名空间，提高兼容性
+    # 【修复】移除所有不必要的命名空间，只保留最基本的
     rss = ET.Element('rss', version='2.0', attrib={
-        'xmlns:atom': 'http://www.w3.org/2005/Atom',
-        'xmlns:dc': 'http://purl.org/dc/elements/1.1/'
+        'xmlns:atom': 'http://www.w3.org/2005/Atom'
     })
     channel = ET.SubElement(rss, 'channel')
 
-    # Channel 元数据（全部使用静态信息）
+    # Channel 元数据 - 保持极简和静态
     ET.SubElement(channel, 'title').text = FEED_TITLE
     ET.SubElement(channel, 'link').text = FEED_LINK
     ET.SubElement(channel, 'description').text = FEED_DESCRIPTION
-    ET.SubElement(channel, 'generator').text = GENERATOR # 【修复】添加 generator
+    ET.SubElement(channel, 'generator').text = GENERATOR
     
     tz_utc_8 = timezone(timedelta(hours=8))
     now = datetime.now(tz_utc_8)
@@ -47,40 +45,35 @@ def generate_rss():
     # 创建 Item
     item = ET.SubElement(channel, 'item')
     
-    # 【布局最终方案】Item 的标题是“作者”
+    # 【重大修复】Item Title: 直接使用文本，不加 CDATA
     item_title_text = quote_author if quote_author else "无名氏"
-    item_title_node = ET.SubElement(item, 'title')
-    item_title_node.text = f"<![CDATA[{item_title_text}]]>"
+    ET.SubElement(item, 'title').text = item_title_text
     
-    # 【可选但推荐】使用 dc:creator 标签明确指定作者
-    ET.SubElement(item, 'dc:creator').text = item_title_text
+    # 【重大修复】创建唯一的、永久的链接和GUID
+    # 使用内容的哈希值作为唯一标识符，确保每个 item 的链接都不同
+    item_id = str(abs(hash(quote_text)))
+    item_permalink = f"{FEED_LINK}#{item_id}" # 使用 #hash 的形式创建页面内锚点链接
+
+    ET.SubElement(item, 'link').text = item_permalink
+    ET.SubElement(item, 'pubDate').text = now.strftime('%a, %d %b %Y %H:%M:%S %z')
     
-    item_link = quote_source if quote_source else FEED_LINK
-    ET.SubElement(item, 'link').text = item_link
+    # 【重大修复】GUID 与 Link 保持一致，这是最稳妥的做法
+    ET.SubElement(item, 'guid').text = item_permalink
     
-    # 【布局最终方案】Item 的描述是“书摘句子”
+    # 【重大修复】Item Description: 直接使用HTML字符串，不加 CDATA
+    # ElementTree 会自动处理特殊字符的转义 (e.g., < to <)
     description_html = f"<blockquote>{quote_text}</blockquote>"
     if quote_source:
         description_html += f'<p><a href="{quote_source}">来源</a></p>'
-        
-    description_node = ET.SubElement(item, 'description')
-    description_node.text = f"<![CDATA[{description_html}]]>"
-
-    ET.SubElement(item, 'pubDate').text = now.strftime('%a, %d %b %Y %H:%M:%S %z')
-    
-    guid_text = f"{now.isoformat()}-{hash(quote_text)}"
-    ET.SubElement(item, 'guid', isPermaLink='false').text = guid_text
+    ET.SubElement(item, 'description').text = description_html
 
     # 3. 写入文件
-    xml_string = ET.tostring(rss, 'unicode')
-    xml_string = xml_string.replace('<![CDATA[', '<![CDATA[').replace(']]>', ']]>')
-    md_parsed = minidom.parseString(xml_string.encode('utf-8'))
-    pretty_xml_string = md_parsed.toprettyxml(indent="    ", encoding='utf-8').decode()
+    # 使用 ElementTree 自带的 indent 功能美化输出，更简单可靠
+    tree = ET.ElementTree(rss)
+    ET.indent(tree, space="  ", level=0)
+    tree.write(RSS_FILE, encoding='utf-8', xml_declaration=True)
 
-    with open(RSS_FILE, 'w', encoding='utf-8') as f:
-        f.write(pretty_xml_string)
-
-    print(f"RSS file '{RSS_FILE}' generated successfully with classic layout.")
+    print(f"RSS file '{RSS_FILE}' generated successfully with barebones compatible format.")
 
 if __name__ == '__main__':
     generate_rss()
