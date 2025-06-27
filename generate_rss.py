@@ -27,10 +27,7 @@ def generate_rss():
     rss = ET.Element('rss', version='2.0', attrib={'xmlns:atom': 'http://www.w3.org/2005/Atom'})
     channel = ET.SubElement(rss, 'channel')
 
-    # --- 以下是实现您新想法的核心修改区域 ---
-
-    # 【重大修改】将 Channel 的标题设置为“作者”
-    # 如果作者名存在，就用作者名；否则，使用备用标题。
+    # 将 Channel 的标题设置为“作者”
     channel_title = quote_author if quote_author else FALLBACK_FEED_TITLE
     ET.SubElement(channel, 'title').text = channel_title
     
@@ -44,20 +41,20 @@ def generate_rss():
     atom_link = ET.SubElement(channel, 'atom:link', href=f"{FEED_LINK}{RSS_FILE}", rel="self", type="application/rss+xml")
 
     # 创建 Item
-    item = ET.SubElement(item, 'item')
+    # 【修复】将 item 添加到 channel 下，而不是 item 自己下面
+    item = ET.SubElement(channel, 'item')
     
-    # 【修改2】将 Item 的标题设置为“书摘内容”
+    # 将 Item 的标题设置为“书摘内容”
     ET.SubElement(item, 'title').text = quote_text
     
     item_link = quote_source if quote_source else FEED_LINK
     ET.SubElement(item, 'link').text = item_link
     
-    # 【修改3】Item 的描述可以设为来源，或留空
+    # Item 的描述可以设为来源，或留空
     description_html = ""
     if quote_source:
         description_html = f'<p>来源: <a href="{quote_source}">{quote_source}</a></p>'
     else:
-        # 如果没有来源，可以不显示任何内容，或者给一个占位符
         description_html = "<p><em>——每日箴言</em></p>"
         
     description_node = ET.SubElement(item, 'description')
@@ -68,8 +65,6 @@ def generate_rss():
     guid_text = f"{now.isoformat()}-{hash(quote_text)}"
     ET.SubElement(item, 'guid', isPermaLink='false').text = guid_text
 
-    # --- 核心修改区域结束 ---
-    
     # 3. 写入文件
     xml_string = ET.tostring(rss, 'unicode')
     xml_string = xml_string.replace('<![CDATA[', '<![CDATA[').replace(']]>', ']]>')
