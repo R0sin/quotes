@@ -1,10 +1,12 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' xmlns:dc="http://purl.org/dc/elements/1.1/" encoding='utf-8'?>
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
   <channel>
     <title>盗賊の極意</title>
-    <link>https://r0sin.github.io/quotes/</link>
+    <link>https://r0sin.github.io/quotes</link>
     <description>每日一条精选书摘或语录</description>
+    <language>zh-CN</language>
     <pubDate>Fri, 27 Jun 2025 10:00:00 +0800</pubDate>
+    <atom:link href="https://r0sin.github.io/rss.xml" type="application/rss+xml" ref="self"/>
     <item>
       <title>一场针对都市病的夏日救援：几素JisuLife ×少数派 独立乐队专辑众筹计划</title>
       <link>https://sspai.com/post/100493</link>
