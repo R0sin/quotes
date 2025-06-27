@@ -47,7 +47,7 @@ def generate_rss():
     
     # 【重大修复】Item Title: 直接使用文本，不加 CDATA
     item_title_text = quote_author if quote_author else "无名氏"
-    ET.SubElement(item, 'title').text = item_title_text
+    ET.SubElement(item, 'title').text = quote_text
     
     # 【重大修复】创建唯一的、永久的链接和GUID
     # 使用内容的哈希值作为唯一标识符，确保每个 item 的链接都不同
