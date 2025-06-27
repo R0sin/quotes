@@ -1,18 +1,17 @@
 <?xml version='1.0' encoding='utf-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
   <channel>
-    <title>盗賊の極意</title>
-    <link>https://r0sin.github.io/quotes</link>
+    <title>Richard Feynman</title>
+    <link>https://r0sin.github.io/quotes/</link>
     <description>每日一条精选书摘或语录</description>
-    <language>zh-CN</language>
-    <pubDate>Fri, 27 Jun 2025 10:00:00 +0800</pubDate>
-    <atom:link href="https://r0sin.github.io/rss.xml" type="application/rss+xml" ref="self"/>
+    <lastBuildDate>Fri, 27 Jun 2025 11:35:18 +0800</lastBuildDate>
+    <atom:link href="https://r0sin.github.io/quotes/rss.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>一场针对都市病的夏日救援：几素JisuLife ×少数派 独立乐队专辑众筹计划</title>
-      <link>https://sspai.com/post/100493</link>
-      <description>黑胶和磁带分A/B两面。有时音乐人会将整张专辑根据情感、主题或问答等有趣维度，把歌曲分别放置在A/B面。比如PinkFloyd《TheDarkSideoftheMoon》，大家都知道它所有的歌曲都围绕 ...<a href="https://sspai.com/post/100493" target="_blank">查看全文</a></description>
-      <author>听歌的水獭</author>
-      <pubDate>Fri, 27 Jun 2025 10:00:00 +0800</pubDate>
+      <title><![CDATA[What I cannot create, I do not understand.]]></title>
+      <link>https://r0sin.github.io/quotes/</link>
+      <description><![CDATA[<p><em>——每日箴言</em></p>]]></description>
+      <pubDate>Fri, 27 Jun 2025 11:35:18 +0800</pubDate>
+      <guid isPermaLink="false">2025-06-27T11:35:18.489692+08:00-5987753607329775015</guid>
     </item>
   </channel>
 </rss>
