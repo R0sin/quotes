@@ -8,8 +8,10 @@ from xml.dom import minidom
 QUOTES_FILE = 'quotes.json'
 RSS_FILE = 'rss.xml'
 FEED_LINK = 'https://r0sin.github.io/quotes/'
-FALLBACK_FEED_TITLE = '盗賊の極意'
+# 【重要】Channel 标题必须是静态的、不变的
+FEED_TITLE = '盗賊の極意'
 FEED_DESCRIPTION = '每日一条精选书摘或语录'
+GENERATOR = 'R0sin/Quotes-RSS-Generator' # 生成器名称
 # ---------------
 
 def generate_rss():
@@ -23,15 +25,18 @@ def generate_rss():
     quote_source = quote.get('source', '')
 
     # 2. 构建 RSS XML 结构
-    rss = ET.Element('rss', version='2.0', attrib={'xmlns:atom': 'http://www.w3.org/2005/Atom'})
+    # 【修复】添加了 dc 命名空间，提高兼容性
+    rss = ET.Element('rss', version='2.0', attrib={
+        'xmlns:atom': 'http://www.w3.org/2005/Atom',
+        'xmlns:dc': 'http://purl.org/dc/elements/1.1/'
+    })
     channel = ET.SubElement(rss, 'channel')
 
-    # Channel 的标题设置为“作者”
-    channel_title = quote_author if quote_author else FALLBACK_FEED_TITLE
-    ET.SubElement(channel, 'title').text = channel_title
-    
+    # Channel 元数据（全部使用静态信息）
+    ET.SubElement(channel, 'title').text = FEED_TITLE
     ET.SubElement(channel, 'link').text = FEED_LINK
     ET.SubElement(channel, 'description').text = FEED_DESCRIPTION
+    ET.SubElement(channel, 'generator').text = GENERATOR # 【修复】添加 generator
     
     tz_utc_8 = timezone(timedelta(hours=8))
     now = datetime.now(tz_utc_8)
@@ -42,19 +47,21 @@ def generate_rss():
     # 创建 Item
     item = ET.SubElement(channel, 'item')
     
-    # 【修复】将 Item 的标题也用 CDATA 包裹，以增强兼容性
+    # 【布局最终方案】Item 的标题是“作者”
+    item_title_text = quote_author if quote_author else "无名氏"
     item_title_node = ET.SubElement(item, 'title')
-    item_title_node.text = f"<![CDATA[{quote_text}]]>"
+    item_title_node.text = f"<![CDATA[{item_title_text}]]>"
+    
+    # 【可选但推荐】使用 dc:creator 标签明确指定作者
+    ET.SubElement(item, 'dc:creator').text = item_title_text
     
     item_link = quote_source if quote_source else FEED_LINK
     ET.SubElement(item, 'link').text = item_link
     
-    # Item 的描述
-    description_html = ""
+    # 【布局最终方案】Item 的描述是“书摘句子”
+    description_html = f"<blockquote>{quote_text}</blockquote>"
     if quote_source:
-        description_html = f'<p>来源: <a href="{quote_source}">{quote_source}</a></p>'
-    else:
-        description_html = "<p><em>——每日箴言</em></p>"
+        description_html += f'<p><a href="{quote_source}">来源</a></p>'
         
     description_node = ET.SubElement(item, 'description')
     description_node.text = f"<![CDATA[{description_html}]]>"
@@ -65,7 +72,6 @@ def generate_rss():
     ET.SubElement(item, 'guid', isPermaLink='false').text = guid_text
 
     # 3. 写入文件
-    # 这个后处理步骤会同时修复 title 和 description 中的 CDATA 标签
     xml_string = ET.tostring(rss, 'unicode')
     xml_string = xml_string.replace('<![CDATA[', '<![CDATA[').replace(']]>', ']]>')
     md_parsed = minidom.parseString(xml_string.encode('utf-8'))
@@ -74,7 +80,7 @@ def generate_rss():
     with open(RSS_FILE, 'w', encoding='utf-8') as f:
         f.write(pretty_xml_string)
 
-    print(f"RSS file '{RSS_FILE}' generated successfully. Channel title is now '{channel_title}'.")
+    print(f"RSS file '{RSS_FILE}' generated successfully with classic layout.")
 
 if __name__ == '__main__':
     generate_rss()
