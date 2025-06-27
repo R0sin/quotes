@@ -8,7 +8,6 @@ from xml.dom import minidom
 QUOTES_FILE = 'quotes.json'
 RSS_FILE = 'rss.xml'
 FEED_LINK = 'https://r0sin.github.io/quotes/'
-# 这个 FEED_TITLE 将作为作者为空时的备用标题
 FALLBACK_FEED_TITLE = '盗賊の極意'
 FEED_DESCRIPTION = '每日一条精选书摘或语录'
 # ---------------
@@ -27,7 +26,7 @@ def generate_rss():
     rss = ET.Element('rss', version='2.0', attrib={'xmlns:atom': 'http://www.w3.org/2005/Atom'})
     channel = ET.SubElement(rss, 'channel')
 
-    # 将 Channel 的标题设置为“作者”
+    # Channel 的标题设置为“作者”
     channel_title = quote_author if quote_author else FALLBACK_FEED_TITLE
     ET.SubElement(channel, 'title').text = channel_title
     
@@ -41,16 +40,16 @@ def generate_rss():
     atom_link = ET.SubElement(channel, 'atom:link', href=f"{FEED_LINK}{RSS_FILE}", rel="self", type="application/rss+xml")
 
     # 创建 Item
-    # 【修复】将 item 添加到 channel 下，而不是 item 自己下面
     item = ET.SubElement(channel, 'item')
     
-    # 将 Item 的标题设置为“书摘内容”
-    ET.SubElement(item, 'title').text = quote_text
+    # 【修复】将 Item 的标题也用 CDATA 包裹，以增强兼容性
+    item_title_node = ET.SubElement(item, 'title')
+    item_title_node.text = f"<![CDATA[{quote_text}]]>"
     
     item_link = quote_source if quote_source else FEED_LINK
     ET.SubElement(item, 'link').text = item_link
     
-    # Item 的描述可以设为来源，或留空
+    # Item 的描述
     description_html = ""
     if quote_source:
         description_html = f'<p>来源: <a href="{quote_source}">{quote_source}</a></p>'
@@ -66,6 +65,7 @@ def generate_rss():
     ET.SubElement(item, 'guid', isPermaLink='false').text = guid_text
 
     # 3. 写入文件
+    # 这个后处理步骤会同时修复 title 和 description 中的 CDATA 标签
     xml_string = ET.tostring(rss, 'unicode')
     xml_string = xml_string.replace('<![CDATA[', '<![CDATA[').replace(']]>', ']]>')
     md_parsed = minidom.parseString(xml_string.encode('utf-8'))
